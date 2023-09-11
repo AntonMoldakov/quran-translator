@@ -1,8 +1,8 @@
 const fs = require('fs').promises;
 const { XMLParser } = require('fast-xml-parser');
 
-const RU_LOCAL_FILE_PATH = './assets/ru.abuadel.xml';
-const ORIGINAL_FILE_PATH = './assets/quran-simple.xml';
+const RU_LOCAL_FILE_PATH = './assets/ru.kuliev.xml';
+const ORIGINAL_FILE_PATH = './assets/quran-uthmani.xml';
 const RESULT_FILE_PATH = './assets/quran.json';
 const COPYRIGHT_BLOCK = `
 // PLEASE DO NOT REMOVE OR CHANGE THIS COPYRIGHT BLOCK
@@ -34,6 +34,12 @@ const COPYRIGHT_BLOCK = `
 //
 //====================================================================`;
 
+const QURAN_FIELDS = {
+  quran: 'quran',
+  sura: 'surahs',
+  aya: 'ayahs',
+};
+
 class XMlFileReader {
   constructor() {}
 
@@ -48,6 +54,7 @@ class XMlFileReader {
     const parser = new XMLParser({
       ignoreAttributes: false,
       attributeNamePrefix: '',
+      transformTagName: (tagname) => QURAN_FIELDS[tagname] || tagname,
     });
     const object = await parser.parse(xml);
 
@@ -68,21 +75,24 @@ class JSONFileWriter {
 const concatTranslations = (original, translate) => {
   const result = [];
 
-  for (let i = 0; i < original.sura.length; i++) {
-    const sura = original.sura[i];
-    const translateSura = translate.sura[i];
+  for (let i = 0; i < original.surahs.length; i++) {
+    const surah = original.surahs[i];
+    const translateSurah = translate.surahs[i];
 
-    result.push(sura);
+    result.push(surah);
 
-    for (let j = 0; j < sura.aya.length; j++) {
-      const aya = sura.aya[j];
-      const translateAya = translateSura.aya[j];
+    for (let j = 0; j < surah.ayahs.length; j++) {
+      const ayah = surah.ayahs[j];
+      const translateAyah = translateSurah.ayahs[j];
 
-      result[i].aya[j] = { ...aya, localizations: { ru: translateAya.text } };
+      result[i].ayahs[j] = {
+        ...ayah,
+        localizations: { ru: translateAyah.text },
+      };
     }
   }
 
-  return { copyright: COPYRIGHT_BLOCK, sura: result };
+  return { copyright: COPYRIGHT_BLOCK, quran: { surahs: result } };
 };
 
 const bootstrap = async () => {
