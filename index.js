@@ -2,8 +2,10 @@ const fs = require('fs').promises;
 const { XMLParser } = require('fast-xml-parser');
 
 const RU_LOCAL_FILE_PATH = './assets/ru.kuliev.xml';
+const RU_SURAH_LOCAL_FILE_PATH = './assets/ru.surah.json';
 const ORIGINAL_FILE_PATH = './assets/quran-uthmani.xml';
 const RESULT_FILE_PATH = './assets/quran.json';
+
 const COPYRIGHT_BLOCK = `
 // PLEASE DO NOT REMOVE OR CHANGE THIS COPYRIGHT BLOCK
 //====================================================================
@@ -72,7 +74,7 @@ class JSONFileWriter {
   }
 }
 
-const concatTranslations = (original, translate) => {
+const concatTranslations = (original, translate, surahTranslate) => {
   const result = [];
 
   for (let i = 0; i < original.surahs.length; i++) {
@@ -81,12 +83,16 @@ const concatTranslations = (original, translate) => {
 
     result.push(surah);
 
+    result[i].localizations = { ru: surahTranslate.surahs[i]?.name };
+    result[i].index = i;
+
     for (let j = 0; j < surah.ayahs.length; j++) {
       const ayah = surah.ayahs[j];
       const translateAyah = translateSurah.ayahs[j];
 
       result[i].ayahs[j] = {
         ...ayah,
+        index: j,
         localizations: { ru: translateAyah.text },
       };
     }
@@ -99,14 +105,19 @@ const bootstrap = async () => {
   const xmlFileReader = new XMlFileReader();
   const jsonFileWriter = new JSONFileWriter();
 
-  const ruTranslateQuran = await xmlFileReader.parseXML(RU_LOCAL_FILE_PATH);
+  const ruQuran = await xmlFileReader.parseXML(RU_LOCAL_FILE_PATH);
   const originalQuran = await xmlFileReader.parseXML(ORIGINAL_FILE_PATH);
 
-  const quran = concatTranslations(originalQuran.quran, ruTranslateQuran.quran);
+  const ruQuranSurahJSON = await fs.readFile(RU_SURAH_LOCAL_FILE_PATH, 'utf-8');
+  const ruQuranSurah = await JSON.parse(ruQuranSurahJSON);
+
+  const quran = concatTranslations(
+    originalQuran.quran,
+    ruQuran.quran,
+    ruQuranSurah
+  );
 
   await jsonFileWriter.writeJSONFile(RESULT_FILE_PATH, quran);
-
-  console.log(`COMPLETE: file saved to ${RESULT_FILE_PATH}`);
 };
 
 bootstrap();
