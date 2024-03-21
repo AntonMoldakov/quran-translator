@@ -1,5 +1,6 @@
 const fs = require('fs').promises;
 const { XMLParser } = require('fast-xml-parser');
+const { v4 } = require('uuid');
 
 const RU_LOCAL_FILE_PATH = './assets/ru.kuliev.xml';
 const RU_SURAH_LOCAL_FILE_PATH = './assets/ru.surah.json';
@@ -93,6 +94,7 @@ const concatTranslations = (original, translate, surahTranslate) => {
       result[i].ayahs[j] = {
         ...ayah,
         index: j,
+        id:v4(),
         localizations: { ru: translateAyah.text },
       };
     }
