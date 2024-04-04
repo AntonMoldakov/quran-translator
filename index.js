@@ -94,7 +94,8 @@ const concatTranslations = (original, translate, surahTranslate) => {
       result[i].ayahs[j] = {
         ...ayah,
         index: j,
-        id:v4(),
+        surahIndex: i,
+        id: v4(),
         localizations: { ru: translateAyah.text },
       };
     }
