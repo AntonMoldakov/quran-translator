@@ -6,6 +6,7 @@ const RU_LOCAL_FILE_PATH = './assets/ru.kuliev.xml';
 const RU_SURAH_LOCAL_FILE_PATH = './assets/ru.surah.json';
 const ORIGINAL_FILE_PATH = './assets/quran-uthmani.xml';
 const RESULT_FILE_PATH = './assets/quran.json';
+const PAGES_FILE_PATH = './assets/pages.xml';
 
 const COPYRIGHT_BLOCK = `
 // PLEASE DO NOT REMOVE OR CHANGE THIS COPYRIGHT BLOCK
@@ -44,7 +45,7 @@ const QURAN_FIELDS = {
 };
 
 class XMlFileReader {
-  constructor() {}
+  constructor() { }
 
   async #readXMLFile(path) {
     const xml = await fs.readFile(path, 'utf-8');
@@ -66,7 +67,7 @@ class XMlFileReader {
 }
 
 class JSONFileWriter {
-  constructor() {}
+  constructor() { }
 
   async writeJSONFile(path, data) {
     const jsonData = JSON.stringify(data);
@@ -75,8 +76,10 @@ class JSONFileWriter {
   }
 }
 
-const concatTranslations = (original, translate, surahTranslate) => {
+const concatTranslations = (original, translate, surahTranslate, pagesData) => {
   const result = [];
+  const pages = pagesData.pages.page
+  let pageIndex = 0
 
   for (let i = 0; i < original.surahs.length; i++) {
     const surah = original.surahs[i];
@@ -91,13 +94,43 @@ const concatTranslations = (original, translate, surahTranslate) => {
       const ayah = surah.ayahs[j];
       const translateAyah = translateSurah.ayahs[j];
 
-      result[i].ayahs[j] = {
-        ...ayah,
-        index: j,
-        surahIndex: i,
-        id: v4(),
-        localizations: { ru: translateAyah.text },
-      };
+      const isLastAyahInPage = i === pages[pageIndex]?.sura - 1 && j === pages[pageIndex]?.aya - 1
+      const isLastAyahOfSurah = pages[pageIndex]?.aya == 1
+
+      if (isLastAyahInPage && !isLastAyahOfSurah) {
+        result[i].ayahs[j] = {
+          ...ayah,
+          index: j,
+          surahIndex: i,
+          id: v4(),
+          localizations: { ru: translateAyah.text },
+          pageNumber: pages[pageIndex].index - 1
+        };
+        pageIndex++
+      } else if (isLastAyahInPage && isLastAyahOfSurah) {
+        result[i].ayahs[j] = {
+          ...ayah,
+          index: j,
+          surahIndex: i,
+          id: v4(),
+          localizations: { ru: translateAyah.text },
+        };
+
+        result[i].ayahs[result[i].ayahs.length - 1] = {
+          ...surah.ayahs[result[i].ayahs.length - 1],
+          pageNumber: pages[pageIndex].index - 1
+        };
+
+        pageIndex++
+      } else {
+        result[i].ayahs[j] = {
+          ...ayah,
+          index: j,
+          surahIndex: i,
+          id: v4(),
+          localizations: { ru: translateAyah.text },
+        };
+      }
     }
   }
 
@@ -110,6 +143,7 @@ const bootstrap = async () => {
 
   const ruQuran = await xmlFileReader.parseXML(RU_LOCAL_FILE_PATH);
   const originalQuran = await xmlFileReader.parseXML(ORIGINAL_FILE_PATH);
+  const pagesQuran = await xmlFileReader.parseXML(PAGES_FILE_PATH);
 
   const ruQuranSurahJSON = await fs.readFile(RU_SURAH_LOCAL_FILE_PATH, 'utf-8');
   const ruQuranSurah = await JSON.parse(ruQuranSurahJSON);
@@ -117,7 +151,8 @@ const bootstrap = async () => {
   const quran = concatTranslations(
     originalQuran.quran,
     ruQuran.quran,
-    ruQuranSurah
+    ruQuranSurah,
+    pagesQuran
   );
 
   await jsonFileWriter.writeJSONFile(RESULT_FILE_PATH, quran);
