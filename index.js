@@ -104,6 +104,10 @@ const concatTranslations = (original, translate, surahTranslate, pagesData) => {
           surahIndex: i,
           id: v4(),
           localizations: { ru: translateAyah.text },
+        };
+
+        result[i].ayahs[j-1] = {
+          ...surah.ayahs[j-1],
           pageNumber: pages[pageIndex].index - 1
         };
         pageIndex++
