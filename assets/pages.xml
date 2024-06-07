@@ -1,7 +1,6 @@
 <pages>
-  <!-- <page index="1" sura="1" aya="1"/> -->
-  <!-- <page index="2" sura="2" aya="1"/> -->
-  <page index="2" sura="1" aya="1"/>
+  <page index="1" sura="1" aya="1"/>
+  <page index="2" sura="2" aya="1"/>
   <page index="3" sura="2" aya="6"/>
   <page index="4" sura="2" aya="17"/>
   <page index="5" sura="2" aya="25"/>
@@ -603,5 +602,5 @@
   <page index="601" sura="103" aya="1"/>
   <page index="602" sura="106" aya="1"/>
   <page index="603" sura="109" aya="1"/>
-  <page index="604" sura="114" aya="1"/>
+  <page index="604" sura="112" aya="1"/>
 </pages>

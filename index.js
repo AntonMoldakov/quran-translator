@@ -111,38 +111,56 @@ const concatPagesQuran = (original, translate, pagesData) => {
   const result = [];
   const pagesArray = pagesData.pages.page;
 
+  let currentSurahIndex = 0;
   let currentAyahIndex = 0;
 
   for (let p = 0; p < pagesArray.length; p++) {
-    const pageIndex = pagesArray[p].index - 2;
-    const surahIndex = pagesArray[p].sura - 1;
-    const ayahEndIndex = pagesArray[p].aya - 1;
-    
+    const pageIndex = pagesArray[p].index - 1;
+    const currentPageAyaIndex = Number(pagesArray[p].aya) - 1;
+    const currentPageSurahIndex = Number(pagesArray[p].sura) - 1;
+    const nextPageAyaIndex = Number(pagesArray[p + 1]?.aya) - 1;
+    const nextPageSurahIndex = Number(pagesArray[p + 1]?.sura) - 1;
+
     const page = {
       index: pageIndex,
       ayahs: []
     };
 
-    const surah = original.surahs[surahIndex];
-    const translateSurah = translate.surahs[surahIndex];
+    while (currentSurahIndex < original.surahs.length) {
+      const surah = original.surahs[currentSurahIndex];
+      const translateSurah = translate.surahs[currentSurahIndex];
 
-    for (let a = currentAyahIndex; a <= ayahEndIndex; a++) {
-      if (a < surah.ayahs.length) {
+      for (let a = currentAyahIndex; a < surah.ayahs.length; a++) {
+        if (currentSurahIndex === nextPageSurahIndex && a >= nextPageAyaIndex) {
+          break;
+        }
+
         const ayah = surah.ayahs[a];
         const translateAyah = translateSurah.ayahs[a];
 
         page.ayahs.push({
           ...ayah,
           index: a,
-          surahIndex: surahIndex,
+          surahIndex: currentSurahIndex,
           id: v4(),
           localizations: { ru: translateAyah?.text }
         });
+
+        if (currentSurahIndex === nextPageSurahIndex && a === nextPageAyaIndex - 1) {
+          currentAyahIndex = a + 1;
+          break;
+        }
+      }
+
+      if (currentSurahIndex === nextPageSurahIndex && currentAyahIndex === nextPageAyaIndex) {
+        break;
+      } else {
+        currentSurahIndex++;
+        currentAyahIndex = 0;
       }
     }
 
     result.push(page);
-    currentAyahIndex = ayahEndIndex + 1;
   }
 
   return { copyright: COPYRIGHT_BLOCK, quran: { pages: result } };
