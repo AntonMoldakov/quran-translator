@@ -1,4 +1,7 @@
 node_modules
 assets/quran.json
+assets/quran-pages.json
 test.js
 quran
+
+.yarn
